@@ -1,3 +1,4 @@
+import { apiService as authAPI } from '../services/api'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -48,27 +49,48 @@ const mockFlaws = [
 ]
 
 const Dashboard = () => {
+  const [flows, setFlows] = useState([])
   const [brutalityScore, setBrutalityScore] = useState(0)
   const [animatedScore, setAnimatedScore] = useState(0)
 
-  useEffect(() => {
-    // Simulate loading brutality score
-    const targetScore = 73
-    setBrutalityScore(targetScore)
-    
-    // Animate score counter
-    const interval = setInterval(() => {
-      setAnimatedScore(prev => {
-        if (prev < targetScore) {
-          return prev + 1
-        }
-        clearInterval(interval)
-        return prev
-      })
-    }, 30)
 
-    return () => clearInterval(interval)
-  }, [])
+  useEffect(() => {
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch user's flows
+      const flowsData = await apiService.getFlows()
+      setFlows(flowsData)
+
+      // Calculate brutality score from backend
+      if (flowsData.length > 0) {
+        const scores = await Promise.all(
+          flowsData.map(flow => apiService.getBrutalityScore(flow.id))
+        )
+        const avgScore =
+          scores.reduce((sum, score) => sum + score.score, 0) / scores.length
+
+        setBrutalityScore(Math.round(avgScore))
+
+        // Animate brutality score
+        let counter = 0
+        const interval = setInterval(() => {
+          setAnimatedScore(prev => {
+            if (prev < Math.round(avgScore)) {
+              return prev + 1
+            }
+            clearInterval(interval)
+            return prev
+          })
+        }, 30)
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+    }
+  }
+
+  fetchDashboardData()
+}, [])
+
 
   // Chart data
   const lineChartData = {

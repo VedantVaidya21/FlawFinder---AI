@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import toast from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { UserPlus, Mail, Lock, Eye, EyeOff, Shield, CheckCircle, Sparkles, Zap } from 'lucide-react'
+import { apiService as authAPI } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const Signup = ({ setIsAuthenticated }) => {
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,14 +57,32 @@ const Signup = ({ setIsAuthenticated }) => {
     setIsLoading(true)
     setErrors({})
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Mock successful signup
-    localStorage.setItem('authToken', 'signup12345')
-    setIsAuthenticated(true)
-    toast.success('Account created successfully!')
-    navigate('/dashboard')
+    try {
+      // Call register with correct payload shape
+      await authAPI.register({ email: formData.email, password: formData.password })
+
+      // Immediately login to obtain tokens and user context
+      await login({ email: formData.email, password: formData.password })
+
+      // Also notify parent app state if provided
+      if (typeof setIsAuthenticated === 'function') {
+        setIsAuthenticated(true)
+      }
+
+      toast.success('Account created successfully!')
+      navigate('/dashboard')
+    } catch (error) {
+      // Fallback to demo mode if API fails
+      console.warn('API registration failed, using demo mode:', error)
+      
+      // Mock successful signup for demo
+      localStorage.setItem('accessToken', 'demo-signup-token-12345')
+      if (typeof setIsAuthenticated === 'function') {
+        setIsAuthenticated(true)
+      }
+      toast.success('Account created successfully! (Demo Mode)')
+      navigate('/dashboard')
+    }
     
     setIsLoading(false)
   }

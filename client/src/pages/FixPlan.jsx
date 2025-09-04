@@ -1,100 +1,118 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { apiService as authAPI } from '../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Copy, CheckCircle, AlertTriangle, Zap, Users, Clock, DollarSign } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const mockFixPlans = [
-  {
-    id: 1,
-    flaw: 'Inefficient approval process',
-    severity: 'High',
-    department: 'HR',
-    impact: 85,
-    estimatedCost: '$2,500',
-    timeline: '2 weeks',
-    fixes: [
-      {
-        title: 'Implement automated workflow approval system',
-        description: 'Deploy a digital approval system that routes requests automatically based on predefined rules.',
-        tools: ['Zapier', 'Microsoft Power Automate', 'Workflow automation software'],
-        steps: [
-          'Map current approval workflow',
-          'Define approval rules and criteria',
-          'Set up automated routing system',
-          'Test with pilot group',
-          'Full rollout and training'
-        ]
-      },
-      {
-        title: 'Reduce approval levels',
-        description: 'Streamline the approval process by reducing unnecessary approval steps.',
-        tools: ['Process mapping software', 'Organizational chart tools'],
-        steps: [
-          'Analyze current approval hierarchy',
-          'Identify redundant approval levels',
-          'Design new streamlined process',
-          'Get stakeholder buy-in',
-          'Implement new process'
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    flaw: 'Manual inventory tracking',
-    severity: 'High',
-    department: 'Operations',
-    impact: 90,
-    estimatedCost: '$5,000',
-    timeline: '3 weeks',
-    fixes: [
-      {
-        title: 'Implement barcode scanning system',
-        description: 'Deploy barcode scanners and inventory management software for real-time tracking.',
-        tools: ['Barcode scanners', 'Inventory management software', 'Mobile devices'],
-        steps: [
-          'Choose inventory management software',
-          'Purchase barcode scanners',
-          'Create barcode labels for all items',
-          'Train staff on new system',
-          'Migrate existing data'
-        ]
-      }
-    ]
-  },
-  {
-    id: 3,
-    flaw: 'Duplicate data entry',
-    severity: 'Medium',
-    department: 'Finance',
-    impact: 65,
-    estimatedCost: '$1,200',
-    timeline: '1 week',
-    fixes: [
-      {
-        title: 'Integrate systems to eliminate duplicate entry',
-        description: 'Connect existing systems to automatically sync data and eliminate manual duplication.',
-        tools: ['API integration tools', 'Data synchronization software'],
-        steps: [
-          'Map data flow between systems',
-          'Set up API connections',
-          'Configure automatic sync rules',
-          'Test data integrity',
-          'Monitor and optimize'
-        ]
-      }
-    ]
-  }
-]
+// const mockFixPlans = [
+//   {
+//     id: 1,
+//     flaw: 'Inefficient approval process',
+//     severity: 'High',
+//     department: 'HR',
+//     impact: 85,
+//     estimatedCost: '$2,500',
+//     timeline: '2 weeks',
+//     fixes: [
+//       {
+//         title: 'Implement automated workflow approval system',
+//         description: 'Deploy a digital approval system that routes requests automatically based on predefined rules.',
+//         tools: ['Zapier', 'Microsoft Power Automate', 'Workflow automation software'],
+//         steps: [
+//           'Map current approval workflow',
+//           'Define approval rules and criteria',
+//           'Set up automated routing system',
+//           'Test with pilot group',
+//           'Full rollout and training'
+//         ]
+//       },
+//       {
+//         title: 'Reduce approval levels',
+//         description: 'Streamline the approval process by reducing unnecessary approval steps.',
+//         tools: ['Process mapping software', 'Organizational chart tools'],
+//         steps: [
+//           'Analyze current approval hierarchy',
+//           'Identify redundant approval levels',
+//           'Design new streamlined process',
+//           'Get stakeholder buy-in',
+//           'Implement new process'
+//         ]
+//       }
+//     ]
+//   },
+//   {
+//     id: 2,
+//     flaw: 'Manual inventory tracking',
+//     severity: 'High',
+//     department: 'Operations',
+//     impact: 90,
+//     estimatedCost: '$5,000',
+//     timeline: '3 weeks',
+//     fixes: [
+//       {
+//         title: 'Implement barcode scanning system',
+//         description: 'Deploy barcode scanners and inventory management software for real-time tracking.',
+//         tools: ['Barcode scanners', 'Inventory management software', 'Mobile devices'],
+//         steps: [
+//           'Choose inventory management software',
+//           'Purchase barcode scanners',
+//           'Create barcode labels for all items',
+//           'Train staff on new system',
+//           'Migrate existing data'
+//         ]
+//       }
+//     ]
+//   },
+//   {
+//     id: 3,
+//     flaw: 'Duplicate data entry',
+//     severity: 'Medium',
+//     department: 'Finance',
+//     impact: 65,
+//     estimatedCost: '$1,200',
+//     timeline: '1 week',
+//     fixes: [
+//       {
+//         title: 'Integrate systems to eliminate duplicate entry',
+//         description: 'Connect existing systems to automatically sync data and eliminate manual duplication.',
+//         tools: ['API integration tools', 'Data synchronization software'],
+//         steps: [
+//           'Map data flow between systems',
+//           'Set up API connections',
+//           'Configure automatic sync rules',
+//           'Test data integrity',
+//           'Monitor and optimize'
+//         ]
+//       }
+//     ]
+//   }
+// ]
 
 const FixPlan = () => {
+  const [fixPlans, setFixPlans] = useState([])
   const [expandedItems, setExpandedItems] = useState({})
 
+  useEffect(() => {
+    const fetchFixPlans = async () => {
+      try {
+        const flows = await apiService.getFlows()
+        const plans = await Promise.all(
+          flows.map(async (flow) => {
+            const fixes = await apiService.getRoleBasedFixes(flow.id, 'engineer')
+            return { ...flow, fixes }
+          })
+        )
+        setFixPlans(plans)
+      } catch (error) {
+        console.error('Failed to fetch fix plans:', error)
+      }
+    }
+
+    fetchFixPlans()
+  }, [])
+
   const toggleExpanded = (id) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }))
+    setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
   const copyToClipboard = (text) => {
@@ -117,7 +135,7 @@ const FixPlan = () => {
 
         {/* Fix Plans */}
         <div className="space-y-6">
-          {mockFixPlans.map((plan, index) => (
+          {fixPlans.map((plan, index) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 20 }}
@@ -292,4 +310,3 @@ const FixPlan = () => {
 }
 
 export default FixPlan
-

@@ -2,28 +2,41 @@ import { motion } from 'framer-motion'
 import { Download, FileText, Printer, TrendingUp, Users, AlertCircle, CheckCircle, BarChart3 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { apiService as authAPI } from '../services/api'
+import { handleApiError } from '../utils/errorHandler' // add this import
+import { useAuth } from '../contexts/AuthContext'
 
 const pagination = [
-  { name: 'Overview', current: true },
-  { name: 'HR', current: false },
-  { name: 'Finance', current: false },
-  { name: 'Operations', current: false },
-  { name: 'IT', current: false },
-  { name: 'Marketing', current: false },
+  { id: 1, name: 'Overview', current: true },
+  { id: 2, name: 'HR', current: false },
+  { id: 3, name: 'Finance', current: false },
+  { id: 4, name: 'Operations', current: false },
+  { id: 5, name: 'IT', current: false },
+  { id: 6, name: 'Marketing', current: false },
 ]
 
+
+
 const CEOReport = () => {
+  const { isAuthenticated } = useAuth()
+  
+  if (!isAuthenticated) {
+    toast.error('Please login to generate report')
+    return null
+  }
+  
   const [tabs, setTabs] = useState(pagination)
+  const [selectedFlowId, setSelectedFlowId] = useState(tabs[0].id)
+ // default to first tab's flow ID
 
   const toggleTab = (index) => {
     setTabs(
       tabs.map((tab, i) => {
-        if (i === index) {
-          return { ...tab, current: true }
-        }
+        if (i === index) return { ...tab, current: true }
         return { ...tab, current: false }
       })
     )
+    setSelectedFlowId(tabs[index].id)  // assign a flow ID (adjust according to your backend)
   }
 
   const handleExportPDF = () => {
@@ -32,6 +45,32 @@ const CEOReport = () => {
 
   const handlePrint = () => {
     toast.success('Report sent to printer!')
+  }
+
+  const handleGenerateReport = async () => {
+    if (!selectedFlowId) {
+      toast.error('Please select a department first')
+      return
+    }
+
+    try {
+      const report = await apiService.generateCEOReport({
+        flow_id: selectedFlowId,
+        include_departments: true,
+        format: 'pdf'
+      })
+      
+      toast.success('CEO report generated successfully!')
+      // Download the report if API returns a file URL
+      if (report.file_url) {
+        const link = document.createElement('a')
+        link.href = report.file_url
+        link.download = `CEO_Report_${tabs.find(tab => tab.current).name}.pdf`
+        link.click()
+      }
+    } catch (error) {
+  handleApiError(error) // uses centralized error handling
+}
   }
 
   const currentTab = tabs.find(tab => tab.current)
@@ -101,6 +140,15 @@ const CEOReport = () => {
               >
                 <Printer className="w-4 h-4 mr-2" />
                 Print
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-primary flex items-center"
+                onClick={handleGenerateReport}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Generate Report
               </motion.button>
             </div>
           </div>
@@ -226,5 +274,3 @@ const CEOReport = () => {
 }
 
 export default CEOReport
-
-
