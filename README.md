@@ -1,177 +1,160 @@
 # 🔍 FlawFinder AI
 
-A stunning, ultra-modern SaaS frontend for analyzing business workflows and detecting operational flaws using AI.
+A modern SaaS platform for analyzing business workflows and detecting operational flaws using AI. Combines a React frontend with a FastAPI backend.
 
-## ✨ Features
+## 🚀 Project Overview
 
-### 🎨 **World-Class Design**
-- **Dark Theme**: Deep purples, electric blues, and neon accents
-- **Glassmorphism & Neumorphism**: Beautiful frosted glass effects
-- **Smooth Animations**: Framer Motion powered micro-interactions
-- **Responsive Design**: Perfect on all devices
+### Frontend Features
+- **Login & Authentication**: JWT-based authentication
+- **Dashboard**: Brutality score indicator with charts
+- **Upload System**: Document upload interface
+- **Fix Plan**: View and manage suggested fixes
+- **CEO Reports**: Executive-level summaries
 
-### 🚀 **Pages & Components**
-- **Login Page**: Animated wave background with Google OAuth
-- **Dashboard**: Brutality score indicator with animated charts
-- **Upload Page**: Drag-and-drop file upload with progress bars
-- **Fix Plan Page**: Accordion UI with animated fix suggestions
-- **CEO Report Page**: Elegant report viewer with export options
-
-### 💫 **UI Elements**
-- **Navigation**: Hover glow effects & animated logo
-- **Buttons**: Gradient backgrounds with scaling animations
-- **Charts**: Chart.js integration with custom themes
-- **Toast Notifications**: Floating animated alerts
-- **Modal Windows**: Glassmorphic confirmation dialogs
+### Backend Features
+- **Process Flow Analysis**: NLP-based workflow analysis
+- **Brutality Score**: Efficiency scoring system
+- **Role-Based Access**: Customized views per user role
+- **API Documentation**: OpenAPI/Swagger docs
+- **Database Migrations**: Alembic-managed schemas
 
 ## 🛠️ Tech Stack
 
-- **React** (Vite)
-- **Tailwind CSS** (with @tailwindcss/vite plugin)
-- **Framer Motion** (Animations)
-- **Chart.js** (Data visualization)
-- **React Router** (Navigation)
-- **React Hot Toast** (Notifications)
-- **Lucide React** (Icons)
-- **React Dropzone** (File uploads)
+### Frontend
+- **Framework**: React (Vite)
+- **UI**: Tailwind CSS
+- **State**: React Context
+- **Routing**: React Router
+- **Components**: 
+  - Framer Motion (animations)
+  - Chart.js (data visualization)
+  - React Hot Toast (notifications)
+  - React Dropzone (file uploads)
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-
-### Installation
-
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-3. **Open your browser**
-   Navigate to `http://localhost:5173`
-
-## 🔐 Demo Credentials
-
-Use these credentials to access the demo:
-- **Email**: `admin@flawfinder.ai`
-- **Password**: `password123`
-
-## 🎯 Key Features
-
-### 📊 **Dashboard**
-- **Brutality Score**: Animated radial progress indicator
-- **Real-time Charts**: Line, bar, and doughnut charts
-- **Flaw Cards**: Interactive cards with hover effects
-- **Statistics**: Key metrics with animated counters
-
-### 📤 **Upload System**
-- **Drag & Drop**: Intuitive file upload interface
-- **Progress Bars**: Animated upload progress
-- **File Validation**: PDF, DOC, DOCX support
-- **Visual Feedback**: Hover states and animations
-
-### 🔧 **Fix Plans**
-- **Accordion UI**: Expandable fix suggestions
-- **Click-to-Copy**: Easy tool recommendation copying
-- **Step-by-Step**: Numbered implementation guides
-- **Cost Estimates**: Timeline and budget information
-
-### 📈 **CEO Reports**
-- **Tabbed Interface**: Department-wise breakdown
-- **Export Options**: PDF and print functionality
-- **Executive Summary**: Key findings and recommendations
-- **Interactive Charts**: Data visualization
-
-## 🎨 Design System
-
-### **Color Palette**
-- **Primary**: Deep purples (#a855f7, #7c3aed)
-- **Secondary**: Electric blues (#0ea5e9, #06b6d4)
-- **Accent**: Neon colors (#ff10f0, #10d9ff)
-- **Dark**: Custom dark grays (#18181b → #fafafa)
-
-### **Typography**
-- **Primary**: Inter (Google Fonts)
-- **Monospace**: JetBrains Mono
-
-### **Animations**
-- **Hover Effects**: Scale, glow, and color transitions
-- **Loading States**: Spinners and progress bars
-- **Page Transitions**: Smooth enter/exit animations
-- **Micro-interactions**: Button clicks and form inputs
-
-## 📱 Responsive Design
-
-The application is fully responsive with:
-- **Mobile Navigation**: Collapsible menu
-- **Tablet Layout**: Optimized grid systems
-- **Desktop Experience**: Full-featured interface
-
-## 🔧 Customization
-
-### **Theme Toggle**
-Light/dark mode toggle is available in the navigation bar (defaults to dark).
-
-### **Custom Scrollbars**
-Beautiful purple-themed scrollbars throughout the application.
-
-### **Glassmorphism Effects**
-- `.glass` - Light glassmorphic effect
-- `.glass-dark` - Dark glassmorphic effect
-- `.neumorphic` - Neumorphic shadows
-
-## 🚀 Build for Production
-
-```bash
-npm run build
-```
+### Backend
+- **Framework**: FastAPI 0.104+
+- **Database**: PostgreSQL 15
+- **ORM**: SQLAlchemy 2.0
+- **Migrations**: Alembic
+- **Authentication**: JWT (python-jose)
+- **Task Queue**: Celery + Redis
+- **ML Libraries**: spaCy, Stanza, NetworkX
 
 ## 📦 Project Structure
 
 ```
-src/
-├── components/         # Reusable UI components
-│   └── Navigation.jsx  # Main navigation component
-├── contexts/          # React contexts
-│   └── ThemeContext.jsx
-├── pages/            # Page components
-│   ├── Login.jsx
-│   ├── Signup.jsx
-│   ├── Dashboard.jsx
-│   ├── Upload.jsx
-│   ├── FixPlan.jsx
-│   └── CEOReport.jsx
-├── App.jsx           # Main application component
-├── main.jsx          # Application entry point
-└── index.css         # Global styles and utilities
+/
+├── backend/                # FastAPI backend
+│   ├── app/
+│   │   ├── api/           # API endpoints
+│   │   ├── core/          # Core config
+│   │   ├── models/        # SQLAlchemy models
+│   │   └── schemas/       # Pydantic schemas
+│   ├── migrations/        # Alembic migrations
+│   └── tests/            # Backend tests
+├── client/               # React frontend
+│   ├── src/
+│   │   ├── components/   # Reusable components
+│   │   ├── pages/        # Page components
+│   │   └── contexts/     # React contexts
+│   └── public/          # Static assets
+└── database_setup.sql   # Database init script
 ```
 
-## 🎯 Performance Features
+## 🚀 Getting Started
 
-- **Lazy Loading**: Code splitting for optimal performance
-- **Optimized Images**: Efficient asset loading
-- **Smooth Animations**: 60fps animations with hardware acceleration
-- **Responsive Charts**: Efficient data visualization
+### Prerequisites
+- Python 3.11+
+- Node.js v16+
+- PostgreSQL 15
+- Redis 7
+
+### Backend Setup
+
+1. **Create virtual environment**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Setup environment**
+   ```bash
+   cp env.example .env
+   # Edit .env with your database credentials
+   ```
+
+4. **Run migrations**
+   ```bash
+   alembic upgrade head
+   ```
+
+5. **Start the API**
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+### Frontend Setup
+
+1. **Install dependencies**
+   ```bash
+   cd client
+   npm install
+   ```
+
+2. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:5173
+   - API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+## 🔐 Demo Access
+
+Use these credentials for testing:
+- **Email**: admin@flawfinder.ai
+- **Password**: password123
+
+## 📝 Environment Variables
+
+### Backend (.env)
+```
+DATABASE_URL=postgresql://flawfinder:password@localhost:5432/flawfinder_db
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-super-secret-jwt-key
+CORS_ORIGINS=["http://localhost:5173"]
+```
+
+### Frontend (.env)
+```
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+```
 
 ## 🔒 Security Features
 
-- **Input Validation**: Form validation and sanitization
-- **Authentication**: JWT token management
-- **Route Protection**: Private route guards
-- **XSS Prevention**: Sanitized data rendering
+- JWT-based authentication
+- Role-based access control
+- Password hashing with bcrypt
+- CORS protection
+- Input validation
+- SQL injection protection
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ---
 
-**Built with ❤️ using React, Tailwind CSS, and Framer Motion**
-
-*"The UI should feel like a futuristic AI business tool that combines luxury, tech, and brutal honesty. Like something from Apple, Notion, and Vercel had a baby."*
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Built with ❤️ using React, FastAPI, and modern web technologies**
