@@ -11,7 +11,7 @@ class Settings(BaseModel):
     API_PREFIX: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://flawfinder:password@localhost:5432/flawfinder_db")
     
     # JWT
     JWT_SECRET: str = "your-super-secret-jwt-key-change-in-production"

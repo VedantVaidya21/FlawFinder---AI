@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import make_asgi_app
 import logging
+from sqlalchemy import text
 
 from .core.config import settings
-from .core.database import engine, Base, SessionLocal
+from .db import engine, Base, SessionLocal
 from .api import auth, flows, reports, agentops
 from . import models  # ensure all models are registered
 from .models.user import User, UserRole, UserStatus
@@ -98,6 +99,18 @@ async def health_check():
         "service": settings.APP_NAME,
         "version": "1.0.0"
     }
+
+
+@app.get("/ping-db")
+async def ping_db():
+    """Ping database connection"""
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        return {"status": "connected", "database": "PostgreSQL"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 @app.exception_handler(HTTPException)

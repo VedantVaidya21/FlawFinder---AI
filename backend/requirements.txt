@@ -9,7 +9,6 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 celery==5.3.4
 redis==5.0.1
-neo4j==5.15.0
 networkx==3.2.1
 spacy==3.7.2
 stanza==1.7.0
@@ -24,3 +23,6 @@ factory-boy==3.3.0
 coverage==7.3.2
 python-dotenv==1.0.0
 email-validator==2.3.0
+psycopg2-binary
+SQLAlchemy>=1.4
+alembic

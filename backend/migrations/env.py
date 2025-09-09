@@ -4,12 +4,15 @@ from sqlalchemy import pool
 from alembic import context
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the app directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from app.core.config import settings
-from app.models.base import Base
+from app.db import Base
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.process_flow import ProcessFlow
@@ -39,8 +42,8 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    """Get database URL from settings"""
-    return settings.DATABASE_URL
+    """Get database URL from env"""
+    return os.getenv("DATABASE_URL")
 
 
 def run_migrations_offline() -> None:
