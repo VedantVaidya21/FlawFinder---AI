@@ -1,48 +1,37 @@
-# TODO for PostgreSQL Migration
+# PostgreSQL/SQLAlchemy Cleanup Tasks
 
-- [x] 1) BACKUP & GIT
-  - Create git branch: db/postgres-migration
-  - Backup backend/app.db to backend/backups/app.db.bak
-  - Backup backend/app/integrations to backend/backups/integrations_backup
+## Files to Remove
+- [x] backend/alembic.ini (file not found - already removed)
+- [x] backend/migrations/ (directory not found - already removed)
+- [x] database_setup.sql (file not found - already removed)
+- [x] setup_database.py (file not found - already removed)
 
-- [x] 2) SEARCH & REPORT
-  - List files referencing Neo4j or SQLite (done)
-  - Identify files to edit vs remove
+## Files to Update
+- [x] backend/app/core/database.py - Converted to Neo4j
+- [x] backend/app/db.py - Already converted to Neo4j
+- [x] backend/app/models/base.py - Already converted to Pydantic
+- [ ] backend/app/models/user.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/organization.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/report.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/task.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/process_flow.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/finding.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/brutality_score.py - Check for SQLAlchemy imports
+- [ ] backend/app/models/agentops.py - Check for SQLAlchemy imports
+- [ ] backend/app/api/auth.py - Check for SQLAlchemy dependencies
+- [ ] backend/app/api/flows.py - Check for SQLAlchemy dependencies
+- [ ] backend/app/api/reports.py - Check for SQLAlchemy dependencies
+- [ ] backend/app/api/agentops.py - Check for SQLAlchemy dependencies
+- [ ] backend/app/core/config.py - Check for PostgreSQL DATABASE_URL
+- [x] backend/requirements.txt - SQLAlchemy dependencies already removed
+- [x] backend/docker-compose.yml - Already uses Neo4j, no PostgreSQL service
 
-- [x] 3) REMOVE / UNWIND DEPENDENCIES
-  - Edit backend/requirements.txt to remove Neo4j and SQLite packages
-  - Add psycopg2-binary, SQLAlchemy, alembic
-  - Provide pip uninstall commands for Neo4j drivers
+## Files to Create
+- [x] backend/app/core/neo4j.py - Neo4j connection utility already exists
+- [x] backend/app/models/ - Models already converted to Pydantic
+- [ ] backend/app/services/ - Check if service classes exist for Neo4j operations
 
-- [x] 4) ENVIRONMENT
-  - Replace backend/.env with PostgreSQL config only
-  - Create backend/.env.example with placeholders
-
-- [x] 5) DB MODULE
-  - Confirm backend/app/db.py as canonical
-  - Patch model files to import Base from app.db
-  - Update alembic/env.py to use app.db.Base and DATABASE_URL
-
-- [ ] 6) MIGRATIONS
-  - Provide commands to create and run initial migration
-
-- [ ] 7) OPTIONAL DATA MIGRATION
-  - Provide optional Neo4j to Postgres migration script
-  - Provide optional SQLite to Postgres migration instructions
-
-- [ ] 8) GRAPH REPO
-  - Provide SQL-based graph repo and NetworkX analysis replacements
-
-- [ ] 9) SCRIPTS + TESTS + DOCS
-  - Create backend/scripts/setup_postgres.sql
-  - Create backend/tests/test_db_connection.py
-  - Create backend/SETUP_POSTGRES.md
-  - Add Makefile targets for db-setup, migrate, test-conn
-
-- [x] 10) REMOVE FILES SAFELY
-  - Backup commands for app.db and Neo4j integration folder
-  - Provide commented removal commands
-
-- [x] 11) SANITY CHECK / CI
-  - Add /ping-db route in app/main.py
-  - Suggest unit tests for graph logic comparison
+## Verification
+- [ ] Ensure all imports are updated
+- [ ] Test that the application can start without errors
+- [ ] Verify that no PostgreSQL/SQLAlchemy references remain

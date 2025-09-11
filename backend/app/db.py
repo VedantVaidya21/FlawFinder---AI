@@ -1,22 +1,11 @@
 # backend/app/db.py
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-
-DATABASE_URL = os.getenv("DATABASE_URL") or "postgresql://flawfinder:password@localhost:5432/flawfinder_db"
-
-# Engine + Session
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base model import for Alembic and models
-Base = declarative_base()
+from .core.neo4j import neo4j_conn
 
 # Dependency for FastAPI endpoints
 def get_db():
-    db = SessionLocal()
+    """Dependency to get Neo4j session"""
+    session = neo4j_conn.driver.session()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        session.close()

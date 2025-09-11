@@ -11,7 +11,9 @@ class Settings(BaseModel):
     API_PREFIX: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://flawfinder:password@localhost:5432/flawfinder_db")
+    NEO4J_URL: str = os.getenv("NEO4J_URL", "bolt://localhost:7687")
+    NEO4J_USER: str = os.getenv("NEO4J_USER", "neo4j")
+    NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "password")
     
     # JWT
     JWT_SECRET: str = "your-super-secret-jwt-key-change-in-production"
@@ -25,10 +27,7 @@ class Settings(BaseModel):
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     
-    # Neo4j
-    NEO4J_URL: str = "bolt://localhost:7687"
-    NEO4J_USER: str = "neo4j"
-    NEO4J_PASSWORD: str = "password"
+    # Neo4j settings are above in Database section
     
     # Storage
     STORAGE_BUCKET: str = "flawfinder-storage"

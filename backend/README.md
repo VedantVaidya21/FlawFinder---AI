@@ -14,26 +14,23 @@ The Ruthless Business & ML Critic - Production-ready FastAPI backend for analyzi
 
 ### Technical Features
 - **FastAPI**: High-performance async API framework
-- **PostgreSQL**: Primary database with SQLAlchemy ORM
+- **Neo4j**: Graph database for flow analysis and complex relationships
 - **Redis**: Caching and Celery task queue
-- **Neo4j**: Graph database for flow analysis
 - **JWT Authentication**: Secure role-based access control
 - **Prometheus Metrics**: Observability and monitoring
 - **Docker**: Containerized deployment
-- **Alembic**: Database migrations
 
 ## 🛠️ Tech Stack
 
 - **Language**: Python 3.11+
 - **Framework**: FastAPI 0.104+
-- **Database**: PostgreSQL 15
-- **ORM**: SQLAlchemy 2.0
-- **Migrations**: Alembic
+- **Database**: Neo4j 5.15+ (Graph Database)
+- **Driver**: neo4j-driver 5.15+
 - **Authentication**: JWT (python-jose)
 - **Password Hashing**: bcrypt (passlib)
 - **Task Queue**: Celery + Redis
-- **Graph DB**: Neo4j
-- **ML Libraries**: spaCy, Stanza, NetworkX
+- **Graph Analysis**: NetworkX
+- **ML Libraries**: spaCy, Stanza
 - **Monitoring**: Prometheus
 - **Testing**: pytest + httpx
 - **Documentation**: OpenAPI 3.1
@@ -42,9 +39,8 @@ The Ruthless Business & ML Critic - Production-ready FastAPI backend for analyzi
 
 - Python 3.11 or higher
 - Docker and Docker Compose
-- PostgreSQL 15
-- Redis 7
 - Neo4j 5.15 (optional)
+- Redis 7
 
 ## 🚀 Quick Start
 
@@ -86,20 +82,26 @@ The Ruthless Business & ML Critic - Production-ready FastAPI backend for analyzi
    pip install -r requirements.txt
    ```
 
-3. **Set up database**
+3. **Set up Neo4j Database**
    ```bash
-   # Create PostgreSQL database
-   createdb flawfinder_db
-   
-   # Run migrations
-   alembic upgrade head
+   # Using Docker for Neo4j
+   docker run -d \
+     --name flawfinder-neo4j \
+     -p 7474:7474 -p 7687:7687 \
+     -e NEO4J_AUTH=neo4j/password \
+     -e NEO4J_PLUGINS='["apoc"]' \
+     neo4j:5.15
+
+   # Wait for Neo4j to start (usually takes 30-60 seconds)
    ```
 
-4. **Start Redis and Neo4j**
+4. **Start Redis**
    ```bash
-   # Using Docker for dependencies
-   docker run -d -p 6379:6379 redis:7-alpine
-   docker run -d -p 7474:7474 -p 7687:7687 neo4j:5.15
+   # Using Docker for Redis
+   docker run -d \
+     --name flawfinder-redis \
+     -p 6379:6379 \
+     redis:7-alpine
    ```
 
 5. **Run the application**
@@ -119,11 +121,11 @@ backend/
 │   │   └── agentops.py     # ML pipeline endpoints
 │   ├── core/               # Core configuration
 │   │   ├── config.py       # Settings and configuration
-│   │   ├── database.py     # Database connection
-│   │   ├── security.py     # JWT and password utilities
-│   │   └── deps.py         # Dependency injection
-│   ├── models/             # SQLAlchemy models
-│   │   ├── base.py         # Base model
+│   │   ├── neo4j.py        # Neo4j connection and utilities
+│   │   ├── deps.py         # Dependency injection
+│   │   └── security.py     # JWT and password utilities
+│   ├── models/             # Neo4j data models
+│   │   ├── base.py         # Base model patterns
 │   │   ├── user.py         # User model
 │   │   ├── process_flow.py # Process flow model
 │   │   ├── finding.py      # Finding model
@@ -140,7 +142,6 @@ backend/
 │   ├── workers/            # Celery tasks
 │   ├── integrations/       # External integrations
 │   └── utils/              # Utility functions
-├── migrations/             # Alembic migrations
 ├── tests/                  # Test suite
 ├── docs/                   # Documentation
 │   ├── openapi.yaml       # OpenAPI specification
@@ -148,7 +149,7 @@ backend/
 ├── docker-compose.yml     # Docker services
 ├── Dockerfile             # Application container
 ├── requirements.txt       # Python dependencies
-├── alembic.ini           # Alembic configuration
+├── setup_neo4j_local.py   # Neo4j local setup script
 └── README.md             # This file
 ```
 
@@ -228,37 +229,29 @@ curl http://localhost:8000/health
 curl http://localhost:8000/metrics
 ```
 
-### Database Migrations
-```bash
-# Create new migration
-alembic revision --autogenerate -m "Add new table"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback migration
-alembic downgrade -1
-```
-
 ## 🔧 Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://flawfinder:password@localhost:5432/flawfinder_db` |
+| `NEO4J_URI` | Neo4j connection string | `bolt://localhost:7687` |
+| `NEO4J_USER` | Neo4j username | `neo4j` |
+| `NEO4J_PASSWORD` | Neo4j password | `password` |
+| `NEO4J_DATABASE` | Neo4j database name | `neo4j` |
 | `JWT_SECRET` | JWT signing secret | `your-super-secret-jwt-key-change-in-production` |
 | `JWT_EXPIRES_IN` | JWT expiration (minutes) | `30` |
 | `CORS_ORIGINS` | Allowed CORS origins | `["http://localhost:5173"]` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
-| `NEO4J_URL` | Neo4j connection string | `bolt://localhost:7687` |
-| `DEBUG` | Debug mode | `False` |
+| `DEBUG` | Debug mode | `False` |`
 
-### Database Configuration
+### Neo4j Configuration
 
-The application supports PostgreSQL with the following extensions:
-- `uuid-ossp` for UUID generation
-- `pg_trgm` for text search (optional)
+The application connects to Neo4j using the following patterns:
+- **Connection**: Bolt protocol (bolt://localhost:7687)
+- **Authentication**: Username/password
+- **Database**: Default 'neo4j' database
+- **Constraints**: Unique constraints on User.email and Organization.name
 
 ## 🚀 Deployment
 
@@ -266,7 +259,9 @@ The application supports PostgreSQL with the following extensions:
 
 1. **Set production environment variables**
    ```bash
-   export DATABASE_URL="postgresql://user:pass@prod-db:5432/flawfinder"
+   export NEO4J_URI="bolt://prod-neo4j:7687"
+   export NEO4J_USER="neo4j"
+   export NEO4J_PASSWORD="your-production-password"
    export JWT_SECRET="your-production-secret"
    export DEBUG=False
    ```
@@ -274,11 +269,6 @@ The application supports PostgreSQL with the following extensions:
 2. **Build and deploy with Docker**
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-3. **Run database migrations**
-   ```bash
-   docker-compose exec api alembic upgrade head
    ```
 
 ### Kubernetes Deployment
@@ -292,7 +282,7 @@ See `k8s/` directory for Kubernetes manifests.
 - **CORS**: Configurable cross-origin requests
 - **Rate Limiting**: Request throttling
 - **Input Validation**: Pydantic schema validation
-- **SQL Injection Protection**: SQLAlchemy ORM
+- **Cypher Injection Protection**: Parameterized queries
 
 ## 🤝 Contributing
 
@@ -322,7 +312,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Process flow analysis
 - CEO report generation
 - AgentOps integration
+- Neo4j graph database integration
 
 ---
 
-**Built with ❤️ using FastAPI, PostgreSQL, and modern Python practices** 
+**Built with ❤️ using FastAPI, Neo4j, and modern Python practices**

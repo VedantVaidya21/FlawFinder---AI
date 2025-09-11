@@ -1,11 +1,10 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from ..core.database import get_db
-from ..core.deps import get_current_active_user
-from ..models.user import User
-from ..models.process_flow import ProcessFlow, FlowStatus
+from ..core.neo4j import get_neo4j
+from ..core.deps import get_current_active_user, User
 from ..schemas.flow import ProcessFlowCreate, ProcessFlowResponse, FlowParseRequest, FlowParseResponse, BrutalityScoreResponse
+import uuid
+from datetime import datetime
 
 router = APIRouter(prefix="/flows", tags=["flows"])
 
@@ -14,82 +13,139 @@ router = APIRouter(prefix="/flows", tags=["flows"])
 def create_flow(
     flow_data: ProcessFlowCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    neo4j_conn = Depends(get_neo4j)
 ):
     """Create a new process flow"""
-    db_flow = ProcessFlow(
-        name=flow_data.name,
-        description=flow_data.description,
-        raw_input=flow_data.raw_input,
-        user_id=current_user.id,
-        organization_id=flow_data.organization_id or current_user.organization_id,
-        status=FlowStatus.DRAFT
-    )
-    
-    db.add(db_flow)
-    db.commit()
-    db.refresh(db_flow)
-    
-    return db_flow
+    flow_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+
+    create_query = """
+    CREATE (f:ProcessFlow {
+        id: $id,
+        name: $name,
+        description: $description,
+        raw_input: $raw_input,
+        user_id: $user_id,
+        organization_id: $organization_id,
+        status: $status,
+        is_active: $is_active,
+        created_at: $created_at,
+        updated_at: $updated_at
+    })
+    RETURN f
+    """
+
+    neo4j_conn.execute_write_query(create_query, {
+        "id": flow_id,
+        "name": flow_data.name,
+        "description": flow_data.description,
+        "raw_input": flow_data.raw_input,
+        "user_id": current_user.id,
+        "organization_id": flow_data.organization_id or current_user.organization_id,
+        "status": "draft",
+        "is_active": True,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    return {
+        "id": flow_id,
+        "name": flow_data.name,
+        "description": flow_data.description,
+        "raw_input": flow_data.raw_input,
+        "user_id": current_user.id,
+        "organization_id": flow_data.organization_id or current_user.organization_id,
+        "status": "draft",
+        "is_active": True,
+        "created_at": now,
+        "updated_at": now
+    }
 
 
 @router.get("/", response_model=List[ProcessFlowResponse])
 def get_flows(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    neo4j_conn = Depends(get_neo4j),
     skip: int = 0,
     limit: int = 100
 ):
     """Get all flows for current user"""
-    flows = db.query(ProcessFlow).filter(
-        ProcessFlow.user_id == current_user.id,
-        ProcessFlow.is_active == True
-    ).offset(skip).limit(limit).all()
-    
-    return flows
+    query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.user_id = $user_id AND f.is_active = true
+    RETURN f.id as id, f.name as name, f.description as description,
+           f.raw_input as raw_input, f.user_id as user_id,
+           f.organization_id as organization_id, f.status as status,
+           f.is_active as is_active, f.created_at as created_at,
+           f.updated_at as updated_at
+    SKIP $skip LIMIT $limit
+    """
+
+    result = neo4j_conn.execute_query(query, {
+        "user_id": current_user.id,
+        "skip": skip,
+        "limit": limit
+    })
+
+    return result
 
 
 @router.get("/{flow_id}", response_model=ProcessFlowResponse)
 def get_flow(
-    flow_id: int,
+    flow_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    neo4j_conn = Depends(get_neo4j)
 ):
     """Get a specific flow by ID"""
-    flow = db.query(ProcessFlow).filter(
-        ProcessFlow.id == flow_id,
-        ProcessFlow.user_id == current_user.id,
-        ProcessFlow.is_active == True
-    ).first()
-    
-    if not flow:
+    query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.id = $flow_id AND f.user_id = $user_id AND f.is_active = true
+    RETURN f.id as id, f.name as name, f.description as description,
+           f.raw_input as raw_input, f.user_id as user_id,
+           f.organization_id as organization_id, f.status as status,
+           f.is_active as is_active, f.created_at as created_at,
+           f.updated_at as updated_at
+    """
+
+    result = neo4j_conn.execute_query(query, {
+        "flow_id": flow_id,
+        "user_id": current_user.id
+    })
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found"
         )
-    
-    return flow
+
+    return result[0]
 
 
 @router.post("/{flow_id}/parse", response_model=FlowParseResponse)
 def parse_flow(
-    flow_id: int,
+    flow_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    neo4j_conn = Depends(get_neo4j)
 ):
     """Parse a process flow and extract findings"""
-    flow = db.query(ProcessFlow).filter(
-        ProcessFlow.id == flow_id,
-        ProcessFlow.user_id == current_user.id,
-        ProcessFlow.is_active == True
-    ).first()
-    
-    if not flow:
+    # First check if flow exists
+    query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.id = $flow_id AND f.user_id = $user_id AND f.is_active = true
+    RETURN f
+    """
+
+    result = neo4j_conn.execute_query(query, {
+        "flow_id": flow_id,
+        "user_id": current_user.id
+    })
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found"
         )
-    
+
     # TODO: Implement actual flow parsing logic
     # This is a mock implementation
     parsed_graph = {
@@ -103,7 +159,7 @@ def parse_flow(
             {"from": "process1", "to": "end"}
         ]
     }
-    
+
     findings = [
         {
             "title": "Manual handoff detected",
@@ -113,12 +169,21 @@ def parse_flow(
             "node_id": "process1"
         }
     ]
-    
+
     # Update flow status
-    flow.status = FlowStatus.COMPLETED  # type: ignore
-    flow.parsed_graph = parsed_graph  # type: ignore
-    db.commit()
-    
+    update_query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.id = $flow_id
+    SET f.status = $status, f.parsed_graph = $parsed_graph, f.updated_at = $updated_at
+    """
+
+    neo4j_conn.execute_write_query(update_query, {
+        "flow_id": flow_id,
+        "status": "completed",
+        "parsed_graph": parsed_graph,
+        "updated_at": datetime.utcnow().isoformat()
+    })
+
     return {
         "flow_id": flow_id,
         "parsed_graph": parsed_graph,
@@ -129,23 +194,29 @@ def parse_flow(
 
 @router.get("/{flow_id}/score", response_model=BrutalityScoreResponse)
 def get_brutality_score(
-    flow_id: int,
+    flow_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    neo4j_conn = Depends(get_neo4j)
 ):
     """Get brutality score for a flow"""
-    flow = db.query(ProcessFlow).filter(
-        ProcessFlow.id == flow_id,
-        ProcessFlow.user_id == current_user.id,
-        ProcessFlow.is_active == True
-    ).first()
-    
-    if not flow:
+    # Check if flow exists
+    query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.id = $flow_id AND f.user_id = $user_id AND f.is_active = true
+    RETURN f
+    """
+
+    result = neo4j_conn.execute_query(query, {
+        "flow_id": flow_id,
+        "user_id": current_user.id
+    })
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found"
         )
-    
+
     # TODO: Implement actual brutality score calculation
     # This is a mock implementation
     score = 73.0
@@ -154,7 +225,7 @@ def get_brutality_score(
         "manual_handoffs": 30.0,
         "rework_loops": 18.0
     }
-    
+
     return {
         "flow_id": flow_id,
         "score": score,
@@ -165,24 +236,30 @@ def get_brutality_score(
 
 @router.get("/{flow_id}/fixes")
 def get_role_based_fixes(
-    flow_id: int,
+    flow_id: str,
     role: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    neo4j_conn = Depends(get_neo4j)
 ):
     """Get role-based fixes for a flow"""
-    flow = db.query(ProcessFlow).filter(
-        ProcessFlow.id == flow_id,
-        ProcessFlow.user_id == current_user.id,
-        ProcessFlow.is_active == True
-    ).first()
-    
-    if not flow:
+    # Check if flow exists
+    query = """
+    MATCH (f:ProcessFlow)
+    WHERE f.id = $flow_id AND f.user_id = $user_id AND f.is_active = true
+    RETURN f
+    """
+
+    result = neo4j_conn.execute_query(query, {
+        "flow_id": flow_id,
+        "user_id": current_user.id
+    })
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found"
         )
-    
+
     # TODO: Implement role-based fix generation
     # This is a mock implementation
     fixes = {
@@ -203,5 +280,5 @@ def get_role_based_fixes(
             }
         ]
     }
-    
-    return fixes.get(role, []) 
+
+    return fixes.get(role, [])

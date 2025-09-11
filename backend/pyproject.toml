@@ -24,7 +24,8 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=app --cov-report=html --cov-report=term-missing"
+# Temporarily disable coverage until pytest-cov is installed
+# addopts = "--cov=app --cov-report=html --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["app"]

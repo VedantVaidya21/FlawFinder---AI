@@ -1,67 +1,96 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from ..core.database import get_db
+from ..core.neo4j import get_neo4j
 from ..core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
-from ..core.deps import get_current_active_user
-from ..models.user import User, UserRole, UserStatus
+from ..core.deps import get_current_active_user, User
 from ..schemas.auth import UserLogin, UserRegister, Token, UserResponse
+import uuid
+from datetime import datetime
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=UserResponse)
-def register(user_data: UserRegister, db: Session = Depends(get_db)):
+def register(user_data: UserRegister, neo4j_conn = Depends(get_neo4j)):
     """Register a new user"""
     # Check if user already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    query = "MATCH (u:User {email: $email}) RETURN u"
+    existing_user = neo4j_conn.execute_query(query, {"email": user_data.email})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Create new user
+    user_id = str(uuid.uuid4())
     hashed_password = get_password_hash(user_data.password)
-    db_user = User(
-        email=user_data.email,
-        hashed_password=hashed_password,
-        # first_name=user_data.first_name,
-        # last_name=user_data.last_name,
-        role=UserRole(user_data.role),
-        status=UserStatus.ACTIVE
-    )
-    
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    return db_user
+    now = datetime.utcnow().isoformat()
+
+    create_query = """
+    CREATE (u:User {
+        id: $id,
+        email: $email,
+        hashed_password: $hashed_password,
+        role: $role,
+        status: $status,
+        is_active: $is_active,
+        created_at: $created_at,
+        updated_at: $updated_at
+    })
+    RETURN u.id as id, u.email as email, u.hashed_password as hashed_password,
+           u.first_name as first_name, u.last_name as last_name, u.role as role,
+           u.status as status, u.organization_id as organization_id,
+           u.is_active as is_active, u.created_at as created_at, u.updated_at as updated_at
+    """
+
+    result = neo4j_conn.execute_query(create_query, {
+        "id": user_id,
+        "email": user_data.email,
+        "hashed_password": hashed_password,
+        "role": user_data.role,
+        "status": "active",
+        "is_active": True,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    user_data = result[0]
+    return User(**user_data)
 
 
 @router.post("/login", response_model=Token)
-def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
+def login(user_credentials: UserLogin, neo4j_conn = Depends(get_neo4j)):
     """Login user and return access token"""
     # Find user by email
-    user = db.query(User).filter(User.email == user_credentials.email).first()
-    if not user or not verify_password(user_credentials.password, user.hashed_password):
+    query = """
+    MATCH (u:User {email: $email, is_active: true})
+    RETURN u.id as id, u.email as email, u.hashed_password as hashed_password,
+           u.first_name as first_name, u.last_name as last_name, u.role as role,
+           u.status as status, u.organization_id as organization_id,
+           u.is_active as is_active, u.created_at as created_at, u.updated_at as updated_at
+    """
+    result = neo4j_conn.execute_query(query, {"email": user_credentials.email})
+
+    if not result or not verify_password(user_credentials.password, result[0]["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    if user.status != UserStatus.ACTIVE:
+
+    user_data = result[0]
+    if user_data["status"] != "active":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user account"
         )
-    
+
     # Create tokens
-    access_token = create_access_token(data={"user_id": user.id, "email": user.email, "role": user.role})
-    refresh_token = create_refresh_token(data={"user_id": user.id})
-    
+    access_token = create_access_token(data={"user_id": user_data["id"], "email": user_data["email"], "role": user_data["role"]})
+    refresh_token = create_refresh_token(data={"user_id": user_data["id"]})
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -71,29 +100,41 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=Token)
-def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+def refresh_token(refresh_token: str, neo4j_conn = Depends(get_neo4j)):
     """Refresh access token using refresh token"""
     from ..core.security import verify_token
-    
+
     payload = verify_token(refresh_token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
         )
-    
+
     user_id = payload.get("user_id")
-    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-    if not user:
+
+    # Query user from Neo4j
+    query = """
+    MATCH (u:User {id: $user_id, is_active: true})
+    RETURN u.id as id, u.email as email, u.hashed_password as hashed_password,
+           u.first_name as first_name, u.last_name as last_name, u.role as role,
+           u.status as status, u.organization_id as organization_id,
+           u.is_active as is_active, u.created_at as created_at, u.updated_at as updated_at
+    """
+    result = neo4j_conn.execute_query(query, {"user_id": user_id})
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found"
         )
-    
+
+    user_data = result[0]
+
     # Create new tokens
-    access_token = create_access_token(data={"user_id": user.id, "email": user.email, "role": user.role})
-    new_refresh_token = create_refresh_token(data={"user_id": user.id})
-    
+    access_token = create_access_token(data={"user_id": user_data["id"], "email": user_data["email"], "role": user_data["role"]})
+    new_refresh_token = create_refresh_token(data={"user_id": user_data["id"]})
+
     return {
         "access_token": access_token,
         "refresh_token": new_refresh_token,

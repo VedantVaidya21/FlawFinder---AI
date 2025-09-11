@@ -1,0 +1,70 @@
+2025-09-11 18:19:15.075+0000 INFO  Logging config in use: File 'C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\conf\user-logs.xml'
+2025-09-11 18:19:15.091+0000 INFO  Starting...
+2025-09-11 18:19:16.901+0000 INFO  This instance is ServerId{64525a15} (64525a15-4a7c-4ace-a939-33f080781c95)
+2025-09-11 18:19:18.128+0000 INFO  ======== Neo4j 5.15.0 ========
+2025-09-11 18:19:20.837+0000 INFO  Bolt enabled on localhost:7687.
+2025-09-11 18:19:21.722+0000 INFO  HTTP enabled on localhost:7474.
+2025-09-11 18:19:21.723+0000 INFO  Remote interface available at http://localhost:7474/
+2025-09-11 18:19:21.726+0000 INFO  id: 3F94FEF19DD2F119485FE66295B254F0749B0BF210DE2728EA8803544A773755
+2025-09-11 18:19:21.726+0000 INFO  name: system
+2025-09-11 18:19:21.727+0000 INFO  creationDate: 2025-09-11T18:19:19.223Z
+2025-09-11 18:19:21.727+0000 INFO  Started.
+2025-09-11 18:20:50.204+0000 INFO  Neo4j Server shutdown initiated by request
+2025-09-11 18:20:50.205+0000 INFO  Stopping...
+2025-09-11 18:20:55.512+0000 INFO  Stopped.
+2025-09-11 18:21:29.558+0000 INFO  Logging config in use: File 'C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\conf\user-logs.xml'
+2025-09-11 18:21:29.584+0000 INFO  Starting...
+2025-09-11 18:21:30.961+0000 INFO  This instance is ServerId{64525a15} (64525a15-4a7c-4ace-a939-33f080781c95)
+2025-09-11 18:21:32.022+0000 INFO  ======== Neo4j 5.15.0 ========
+2025-09-11 18:21:33.735+0000 INFO  Bolt enabled on localhost:7687.
+2025-09-11 18:21:34.811+0000 INFO  HTTP enabled on localhost:7474.
+2025-09-11 18:21:34.812+0000 INFO  Remote interface available at http://localhost:7474/
+2025-09-11 18:21:34.822+0000 INFO  id: 3F94FEF19DD2F119485FE66295B254F0749B0BF210DE2728EA8803544A773755
+2025-09-11 18:21:34.823+0000 INFO  name: system
+2025-09-11 18:21:34.826+0000 INFO  creationDate: 2025-09-11T18:19:19.223Z
+2025-09-11 18:21:34.827+0000 INFO  Started.
+2025-09-11 18:23:50.909+0000 WARN  [bolt-0] The client is unauthorized due to authentication failure.
+2025-09-11 18:25:16.771+0000 WARN  [bolt-1] The client is unauthorized due to authentication failure.
+2025-09-11 18:41:35.462+0000 INFO  Logging config in use: File 'C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\conf\user-logs.xml'
+2025-09-11 18:41:35.476+0000 INFO  Starting...
+2025-09-11 18:41:36.716+0000 INFO  This instance is ServerId{64525a15} (64525a15-4a7c-4ace-a939-33f080781c95)
+2025-09-11 18:41:37.619+0000 INFO  ======== Neo4j 5.15.0 ========
+2025-09-11 18:41:42.937+0000 ERROR Failed to start Neo4j on localhost:7474.
+java.lang.RuntimeException: Error starting Neo4j database server at C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\data\databases
+	at org.neo4j.graphdb.facade.DatabaseManagementServiceFactory.startDatabaseServer(DatabaseManagementServiceFactory.java:273) ~[neo4j-5.15.0.jar:5.15.0]
+	at org.neo4j.graphdb.facade.DatabaseManagementServiceFactory.build(DatabaseManagementServiceFactory.java:209) ~[neo4j-5.15.0.jar:5.15.0]
+	at org.neo4j.server.CommunityBootstrapper.createNeo(CommunityBootstrapper.java:38) ~[neo4j-5.15.0.jar:5.15.0]
+	at org.neo4j.server.NeoBootstrapper.start(NeoBootstrapper.java:187) [neo4j-5.15.0.jar:5.15.0]
+	at org.neo4j.server.NeoBootstrapper.start(NeoBootstrapper.java:99) [neo4j-5.15.0.jar:5.15.0]
+	at org.neo4j.server.CommunityEntryPoint.main(CommunityEntryPoint.java:30) [neo4j-5.15.0.jar:5.15.0]
+Caused by: org.neo4j.kernel.lifecycle.LifecycleException: Component 'org.neo4j.kernel.internal.locker.LockerLifecycleAdapter@323e8306' was successfully initialized, but failed to start. Please see the attached cause exception "Lock file has been locked by another process: C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\data\databases\store_lock. Please ensure no other process is using this database, and that the directory is writable (required even for read-only access)".
+	at org.neo4j.kernel.lifecycle.LifeSupport$LifecycleInstance.start(LifeSupport.java:364) ~[neo4j-common-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.lifecycle.LifeSupport.start(LifeSupport.java:91) ~[neo4j-common-5.15.0.jar:5.15.0]
+	at org.neo4j.graphdb.facade.DatabaseManagementServiceFactory.startDatabaseServer(DatabaseManagementServiceFactory.java:264) ~[neo4j-5.15.0.jar:5.15.0]
+	... 5 more
+Caused by: org.neo4j.io.locker.FileLockException: Lock file has been locked by another process: C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\data\databases\store_lock. Please ensure no other process is using this database, and that the directory is writable (required even for read-only access)
+	at org.neo4j.io.locker.Locker.storeLockException(Locker.java:151) ~[neo4j-io-5.15.0.jar:5.15.0]
+	at org.neo4j.io.locker.Locker.checkLock(Locker.java:82) ~[neo4j-io-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.internal.locker.GlobalFileLocker.checkLock(GlobalFileLocker.java:55) ~[neo4j-kernel-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.internal.locker.GlobalLocker.checkLock(GlobalLocker.java:28) ~[neo4j-kernel-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.internal.locker.LockerLifecycleAdapter.start(LockerLifecycleAdapter.java:34) ~[neo4j-kernel-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.lifecycle.LifeSupport$LifecycleInstance.start(LifeSupport.java:347) ~[neo4j-common-5.15.0.jar:5.15.0]
+	at org.neo4j.kernel.lifecycle.LifeSupport.start(LifeSupport.java:91) ~[neo4j-common-5.15.0.jar:5.15.0]
+	at org.neo4j.graphdb.facade.DatabaseManagementServiceFactory.startDatabaseServer(DatabaseManagementServiceFactory.java:264) ~[neo4j-5.15.0.jar:5.15.0]
+	... 5 more
+2025-09-11 18:41:42.939+0000 INFO  Neo4j Server shutdown initiated by request
+2025-09-11 18:41:42.940+0000 INFO  Stopped.
+2025-09-11 18:44:02.916+0000 INFO  Logging config in use: File 'C:\Users\Jayprakash Damarla\Desktop\FlawFinder Latest\backend\neo4j-community-5.15.0\conf\user-logs.xml'
+2025-09-11 18:44:02.931+0000 INFO  Starting...
+2025-09-11 18:44:04.157+0000 INFO  This instance is ServerId{64525a15} (64525a15-4a7c-4ace-a939-33f080781c95)
+2025-09-11 18:44:04.952+0000 INFO  ======== Neo4j 5.15.0 ========
+2025-09-11 18:44:06.689+0000 INFO  Bolt enabled on localhost:7687.
+2025-09-11 18:44:07.555+0000 INFO  HTTP enabled on localhost:7474.
+2025-09-11 18:44:07.556+0000 INFO  Remote interface available at http://localhost:7474/
+2025-09-11 18:44:07.558+0000 INFO  id: 3F94FEF19DD2F119485FE66295B254F0749B0BF210DE2728EA8803544A773755
+2025-09-11 18:44:07.559+0000 INFO  name: system
+2025-09-11 18:44:07.559+0000 INFO  creationDate: 2025-09-11T18:19:19.223Z
+2025-09-11 18:44:07.559+0000 INFO  Started.
+2025-09-11 18:55:32.395+0000 INFO  Neo4j Server shutdown initiated by request
+2025-09-11 18:55:32.399+0000 INFO  Stopping...
+2025-09-11 18:55:37.541+0000 INFO  Stopped.

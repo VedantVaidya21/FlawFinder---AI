@@ -1,28 +1,23 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+# Neo4j database connection utilities
+from neo4j import GraphDatabase
 from .config import settings
 
-# Create database engine
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=settings.DEBUG
+# Create Neo4j driver
+driver = GraphDatabase.driver(
+    settings.NEO4J_URL,
+    auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD)
 )
-
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create base class for models
-Base = declarative_base()
 
 
 def get_db():
-    """Dependency to get database session"""
-    db = SessionLocal()
+    """Dependency to get Neo4j driver session"""
+    session = driver.session()
     try:
-        yield db
+        yield session
     finally:
-        db.close() 
+        session.close()
+
+
+def close_driver():
+    """Close the Neo4j driver"""
+    driver.close()

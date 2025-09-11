@@ -3,14 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import make_asgi_app
 import logging
-from sqlalchemy import text
 
 from .core.config import settings
-from .db import engine, Base, SessionLocal
+from .core.neo4j import neo4j_conn, close_neo4j_connection
 from .api import auth, flows, reports, agentops
-from . import models  # ensure all models are registered
-from .models.user import User, UserRole, UserStatus
 from .core.security import get_password_hash
+import uuid
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL))
@@ -47,31 +46,51 @@ app.include_router(agentops.router, prefix=settings.API_PREFIX)
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database tables and seed demo user"""
+    """Initialize database and seed demo user"""
     try:
-        # Create all tables
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully")
+        # Test Neo4j connection and seed demo user if none exists
+        query = "MATCH (u:User {email: $email}) RETURN u"
+        result = neo4j_conn.execute_query(query, {"email": "admin@flawfinder.ai"})
 
-        # Seed demo user if none exists
-        db = SessionLocal()
-        try:
-            if not db.query(User).first():
-                demo = User(
-                    email="admin@flawfinder.ai",
-                    hashed_password=get_password_hash("password123"),
-                    first_name="Admin",
-                    last_name="User",
-                    role=UserRole.ADMIN,
-                    status=UserStatus.ACTIVE,
-                )
-                db.add(demo)
-                db.commit()
-                logger.info("Seeded demo user admin@flawfinder.ai / password123")
-        finally:
-            db.close()
+        if not result:
+            # Create demo user
+            user_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat()
+
+            create_query = """
+            CREATE (u:User {
+                id: $id,
+                email: $email,
+                hashed_password: $hashed_password,
+                first_name: $first_name,
+                last_name: $last_name,
+                role: $role,
+                status: $status,
+                is_active: $is_active,
+                created_at: $created_at,
+                updated_at: $updated_at
+            })
+            """
+
+            neo4j_conn.execute_write_query(create_query, {
+                "id": user_id,
+                "email": "admin@flawfinder.ai",
+                "hashed_password": get_password_hash("password123"),
+                "first_name": "Admin",
+                "last_name": "User",
+                "role": "admin",
+                "status": "active",
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now
+            })
+
+            logger.info("Seeded demo user admin@flawfinder.ai / password123")
+
+        logger.info("Neo4j database initialized successfully")
+
     except Exception as e:
-        logger.error(f"Error creating database tables: {e}")
+        logger.error(f"Error initializing Neo4j database: {e}")
 
 
 @app.on_event("shutdown")
@@ -105,10 +124,12 @@ async def health_check():
 async def ping_db():
     """Ping database connection"""
     try:
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        return {"status": "connected", "database": "PostgreSQL"}
+        # Test Neo4j connection with a simple query
+        result = neo4j_conn.execute_query("RETURN 'Neo4j connected' as message")
+        if result:
+            return {"status": "connected", "database": "Neo4j"}
+        else:
+            return {"status": "error", "error": "No response from Neo4j"}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
