@@ -1,0 +1,11 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+backend/logs/
+# Node
+client/node_modules/
+client/dist/
+# OS/Editor
+.DS_Store
+*.log

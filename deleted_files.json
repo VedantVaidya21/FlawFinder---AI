@@ -1,0 +1,15 @@
+[
+  {"name": "agentops.py", "path": "backend/app/api/agentops.py"},
+  {"name": "api-matrix.md", "path": "backend/docs/api-matrix.md"},
+  {"name": "openapi.yaml", "path": "backend/docs/openapi.yaml"},
+  {"name": "auth_middleware.py", "path": "backend/app/api/v1/middleware/auth_middleware.py"},
+  {"name": "package.json", "path": "backend/package.json"},
+  {"name": "setup_database.py", "path": "setup_database.py"},
+  {"name": "node_modules", "path": "backend/node_modules"},
+  {"name": "app.log", "path": "backend/logs/app.log"},
+  {"name": "dist", "path": "client/dist"},
+  {"name": "database_setup.sql", "path": "database_setup.sql"},
+  {"name": "MANUAL_SETUP_INSTRUCTIONS.md", "path": "MANUAL_SETUP_INSTRUCTIONS.md"},
+  {"name": "docs", "path": "backend/docs"},
+  {"name": "INTEGRATION_NOTES.md", "path": "backend/INTEGRATION_NOTES.md"}
+]
